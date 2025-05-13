@@ -1,14 +1,15 @@
 import json
 import logging
 import threading
-from typing import Any, Callable, Dict
+from typing import Callable, Dict, List, Any
 
 from confluent_kafka import Consumer, Producer, KafkaError, KafkaException
 
 from src.config import config
 from src.models import (
     CatalogAvailabilityChanged, CatalogSubscriptionMatched,
-    PeerCatalogUpdated, PeerConnected, PeerDisconnected
+    PeerCatalogUpdated, PeerConnected, PeerDisconnected,
+    PeerInfo
 )
 
 logger = logging.getLogger(__name__)
@@ -29,21 +30,38 @@ class KafkaService:
 
     def publish_catalog_availability_changed(self, event: CatalogAvailabilityChanged) -> None:
         """Publish a catalog.availability.changed event."""
+        # Convert the model to dict with custom datetime handling
+        event_dict = self._model_to_dict(event)
         self._publish_message(
             self.kafka_config.catalog_availability_changed_topic,
-            event.model_dump()
+            event_dict
         )
 
     def publish_catalog_subscription_matched(self, event: CatalogSubscriptionMatched) -> None:
         """Publish a catalog.subscription.matched event."""
+        # Convert the model to dict with custom datetime handling
+        event_dict = self._model_to_dict(event)
         # Convert PeerInfo objects to dicts
-        event_dict = event.model_dump()
-        event_dict["available_peers"] = [peer.model_dump() for peer in event.available_peers]
-
+        event_dict["available_peers"] = [self._model_to_dict(peer) for peer in event.available_peers]
+        
         self._publish_message(
             self.kafka_config.catalog_subscription_matched_topic,
             event_dict
         )
+
+    def _model_to_dict(self, model) -> Dict[str, Any]:
+        """Convert a model to dict with custom datetime handling."""
+        result = {}
+        for key, value in model.model_dump().items():
+            # Handle datetime serialization
+            if hasattr(value, 'isoformat'):
+                result[key] = value.isoformat()
+            elif isinstance(value, list) and value and hasattr(value[0], 'model_dump'):
+                # Handle lists of models
+                result[key] = [self._model_to_dict(item) for item in value]
+            else:
+                result[key] = value
+        return result
 
     def _publish_message(self, topic: str, message: Dict[str, Any]) -> None:
         """Publish a message to a Kafka topic."""
@@ -60,7 +78,7 @@ class KafkaService:
 
             # Flush to ensure message is sent
             self.producer.flush()
-
+            
             logger.debug(f"Published message to {topic}")
 
         except Exception as e:
@@ -106,11 +124,11 @@ class KafkaService:
             daemon=True
         )
         self.consumer_thread.start()
-
+        
         logger.info(f"Kafka consumer started, listening to topics: "
-                    f"{self.kafka_config.peer_connected_topic}, "
-                    f"{self.kafka_config.peer_disconnected_topic}, "
-                    f"{self.kafka_config.peer_catalog_updated_topic}")
+                   f"{self.kafka_config.peer_connected_topic}, "
+                   f"{self.kafka_config.peer_disconnected_topic}, "
+                   f"{self.kafka_config.peer_catalog_updated_topic}")
 
     def _consume_loop(self,
                       peer_connected_handler: Callable[[PeerConnected], None],
@@ -139,6 +157,9 @@ class KafkaService:
                     message_json = msg.value().decode('utf-8')
                     message = json.loads(message_json)
 
+                    # Convert ISO format dates to datetime objects
+                    self._convert_iso_dates(message)
+
                     # Handle message based on topic
                     if msg.topic() == self.kafka_config.peer_connected_topic:
                         event = PeerConnected(**message)
@@ -153,8 +174,7 @@ class KafkaService:
                     elif msg.topic() == self.kafka_config.peer_catalog_updated_topic:
                         event = PeerCatalogUpdated(**message)
                         peer_catalog_updated_handler(event)
-                        logger.debug(
-                            f"Processed peer catalog updated event: {event.peer_id} with {len(event.catalog_ids)} catalog IDs")
+                        logger.debug(f"Processed peer catalog updated event: {event.peer_id} with {len(event.catalog_ids)} catalog IDs")
 
                 except Exception as e:
                     logger.error(f"Failed to process message: {e}")
@@ -166,17 +186,33 @@ class KafkaService:
                 self.consumer.close()
                 logger.info("Kafka consumer closed")
 
+    def _convert_iso_dates(self, data: Dict[str, Any]) -> None:
+        """Convert ISO format date strings to datetime objects."""
+        from datetime import datetime
+        for key, value in data.items():
+            if isinstance(value, str) and 'T' in value:
+                try:
+                    data[key] = datetime.fromisoformat(value)
+                except ValueError:
+                    pass
+            elif isinstance(value, dict):
+                self._convert_iso_dates(value)
+            elif isinstance(value, list):
+                for item in value:
+                    if isinstance(item, dict):
+                        self._convert_iso_dates(item)
+
     def stop_consuming(self) -> None:
         """Stop consuming Kafka messages."""
         if not self.running:
             return
-
+            
         logger.info("Stopping Kafka consumer...")
         self.running = False
-
+        
         if self.consumer_thread:
             self.consumer_thread.join(timeout=5.0)
             if self.consumer_thread.is_alive():
                 logger.warning("Kafka consumer thread did not terminate gracefully")
-
+        
         logger.info("Kafka consumer stopped")
