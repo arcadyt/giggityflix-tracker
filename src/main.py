@@ -3,12 +3,12 @@ import logging
 import signal
 from concurrent import futures
 
-import grpc
+from src.grpc.generated.tracker_pb2_grpc import add_TrackerServiceServicer_to_server
 
+import grpc
 from src.config import config
 from src.dependencies import get_tracker_service
 from src.grpc.server import TrackerServicer
-from src.grpc.generated.tracker_pb2_grpc import add_TrackerServiceServicer_to_server
 from src.services.kafka_service import KafkaService
 
 logger = logging.getLogger(__name__)

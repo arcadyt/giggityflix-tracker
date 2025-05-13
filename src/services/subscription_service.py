@@ -1,7 +1,7 @@
 import logging
 import uuid
 from datetime import datetime, timedelta
-from typing import List, Optional, Set
+from typing import List, Optional
 
 from src.config import config
 from src.models import (
@@ -20,7 +20,7 @@ class SubscriptionService:
         self.kafka_service = kafka_service
         self.service_config = config.service
 
-    def create_subscription(self, service_id: str, catalog_id: str, 
+    def create_subscription(self, service_id: str, catalog_id: str,
                             expiration_seconds: Optional[int] = None) -> Optional[CatalogSubscription]:
         """
         Create a new subscription for a catalog ID.
@@ -28,13 +28,13 @@ class SubscriptionService:
         """
         # Generate a unique subscription ID
         subscription_id = str(uuid.uuid4())
-        
+
         # Set expiration time
         if expiration_seconds is None:
             expiration_seconds = self.service_config.subscription_default_ttl_hours * 3600
-            
+
         expires_at = datetime.now() + timedelta(seconds=expiration_seconds)
-        
+
         # Create subscription object
         subscription = CatalogSubscription(
             subscription_id=subscription_id,
@@ -43,18 +43,18 @@ class SubscriptionService:
             expires_at=expires_at,
             status=SubscriptionStatus.ACTIVE
         )
-        
+
         # Save to Redis
         success = self.redis_service.create_subscription(subscription)
         if not success:
             logger.error(f"Failed to create subscription for service {service_id}, catalog {catalog_id}")
             return None
-        
+
         logger.info(f"Created subscription {subscription_id} for service {service_id}, catalog {catalog_id}")
-        
+
         # Check if catalog is already available
         self.check_subscription_fulfillment(subscription)
-        
+
         return subscription
 
     def check_subscription_fulfillment(self, subscription: CatalogSubscription) -> bool:
@@ -66,25 +66,25 @@ class SubscriptionService:
         # Skip if already fulfilled
         if subscription.status != SubscriptionStatus.ACTIVE:
             return False
-            
+
         # Get all available peers for the catalog
         peers = self.redis_service.get_peer_info_for_catalog(subscription.catalog_id)
-        
+
         # If no peers, can't fulfill
         if not peers:
             return False
-            
+
         # Get peers that haven't been notified yet
         new_peers = [p for p in peers if p.peer_id not in subscription.notified_peer_ids]
-        
+
         # If no new peers, no need to notify
         if not new_peers:
             return False
-            
+
         # Update notified peers
         for peer in new_peers:
             self.redis_service.add_notified_peer(subscription.subscription_id, peer.peer_id)
-            
+
         # Send notification
         event = CatalogSubscriptionMatched(
             subscription_id=subscription.subscription_id,
@@ -92,9 +92,9 @@ class SubscriptionService:
             catalog_id=subscription.catalog_id,
             available_peers=new_peers
         )
-        
+
         self.kafka_service.publish_catalog_subscription_matched(event)
-        
+
         logger.info(f"Fulfilled subscription {subscription.subscription_id} with {len(new_peers)} peers")
         return True
 
@@ -105,24 +105,24 @@ class SubscriptionService:
         """
         # Get all active subscriptions for this catalog
         subscriptions = self.redis_service.get_subscriptions_for_catalog(catalog_id)
-        
+
         fulfilled_count = 0
         for subscription in subscriptions:
             # Skip non-active subscriptions
             if subscription.status != SubscriptionStatus.ACTIVE:
                 continue
-                
+
             # Get peer IDs that haven't been notified
             notified_peer_ids = subscription.notified_peer_ids
             new_peers = [p for p in available_peers if p.peer_id not in notified_peer_ids]
-            
+
             if not new_peers:
                 continue
-                
+
             # Update notified peers
             for peer in new_peers:
                 self.redis_service.add_notified_peer(subscription.subscription_id, peer.peer_id)
-                
+
             # Send notification
             event = CatalogSubscriptionMatched(
                 subscription_id=subscription.subscription_id,
@@ -130,13 +130,13 @@ class SubscriptionService:
                 catalog_id=subscription.catalog_id,
                 available_peers=new_peers
             )
-            
+
             self.kafka_service.publish_catalog_subscription_matched(event)
             fulfilled_count += 1
-            
+
         if fulfilled_count > 0:
             logger.info(f"Fulfilled {fulfilled_count} subscriptions for catalog {catalog_id}")
-            
+
         return fulfilled_count
 
     def get_subscription(self, subscription_id: str) -> Optional[CatalogSubscription]:

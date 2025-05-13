@@ -1,16 +1,14 @@
-import asyncio
 import json
 import logging
 import threading
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict
 
 from confluent_kafka import Consumer, Producer, KafkaError, KafkaException
 
 from src.config import config
 from src.models import (
     CatalogAvailabilityChanged, CatalogSubscriptionMatched,
-    PeerCatalogUpdated, PeerConnected, PeerDisconnected,
-    PeerInfo
+    PeerCatalogUpdated, PeerConnected, PeerDisconnected
 )
 
 logger = logging.getLogger(__name__)
@@ -41,7 +39,7 @@ class KafkaService:
         # Convert PeerInfo objects to dicts
         event_dict = event.model_dump()
         event_dict["available_peers"] = [peer.model_dump() for peer in event.available_peers]
-        
+
         self._publish_message(
             self.kafka_config.catalog_subscription_matched_topic,
             event_dict
@@ -62,7 +60,7 @@ class KafkaService:
 
             # Flush to ensure message is sent
             self.producer.flush()
-            
+
             logger.debug(f"Published message to {topic}")
 
         except Exception as e:
@@ -108,11 +106,11 @@ class KafkaService:
             daemon=True
         )
         self.consumer_thread.start()
-        
+
         logger.info(f"Kafka consumer started, listening to topics: "
-                   f"{self.kafka_config.peer_connected_topic}, "
-                   f"{self.kafka_config.peer_disconnected_topic}, "
-                   f"{self.kafka_config.peer_catalog_updated_topic}")
+                    f"{self.kafka_config.peer_connected_topic}, "
+                    f"{self.kafka_config.peer_disconnected_topic}, "
+                    f"{self.kafka_config.peer_catalog_updated_topic}")
 
     def _consume_loop(self,
                       peer_connected_handler: Callable[[PeerConnected], None],
@@ -155,7 +153,8 @@ class KafkaService:
                     elif msg.topic() == self.kafka_config.peer_catalog_updated_topic:
                         event = PeerCatalogUpdated(**message)
                         peer_catalog_updated_handler(event)
-                        logger.debug(f"Processed peer catalog updated event: {event.peer_id} with {len(event.catalog_ids)} catalog IDs")
+                        logger.debug(
+                            f"Processed peer catalog updated event: {event.peer_id} with {len(event.catalog_ids)} catalog IDs")
 
                 except Exception as e:
                     logger.error(f"Failed to process message: {e}")
@@ -171,13 +170,13 @@ class KafkaService:
         """Stop consuming Kafka messages."""
         if not self.running:
             return
-            
+
         logger.info("Stopping Kafka consumer...")
         self.running = False
-        
+
         if self.consumer_thread:
             self.consumer_thread.join(timeout=5.0)
             if self.consumer_thread.is_alive():
                 logger.warning("Kafka consumer thread did not terminate gracefully")
-        
+
         logger.info("Kafka consumer stopped")

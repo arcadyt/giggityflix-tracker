@@ -1,6 +1,7 @@
 # Giggityflix Tracker Service
 
-Microservice for tracking peer connections, routing requests, and managing catalog availability for the Giggityflix media streaming platform.
+Microservice for tracking peer connections, routing requests, and managing catalog availability for the Giggityflix
+media streaming platform.
 
 ## Overview
 
@@ -31,7 +32,7 @@ poetry run python -m src.main
 ### Server Configuration
 
 - `GRPC_ADDRESS`: gRPC server address (default: 0.0.0.0:50051)
-- `GRPC_MAX_WORKERS`: Maximum number of workers (default: 10) 
+- `GRPC_MAX_WORKERS`: Maximum number of workers (default: 10)
 - `GRPC_USE_TLS`: Use TLS for gRPC (default: false)
 
 ### Kafka Configuration

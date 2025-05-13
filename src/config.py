@@ -12,7 +12,7 @@ class GrpcConfig(BaseModel):
 class KafkaConfig(BaseModel):
     bootstrap_servers: str = Field(default_factory=lambda: os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092"))
     group_id: str = Field(default_factory=lambda: os.environ.get("KAFKA_GROUP_ID", "tracker-service"))
-    
+
     # Topics for consuming
     peer_connected_topic: str = Field(
         default_factory=lambda: os.environ.get("KAFKA_PEER_CONNECTED_TOPIC", "peer.connection.established"))
@@ -20,12 +20,14 @@ class KafkaConfig(BaseModel):
         default_factory=lambda: os.environ.get("KAFKA_PEER_DISCONNECTED_TOPIC", "peer.connection.closed"))
     peer_catalog_updated_topic: str = Field(
         default_factory=lambda: os.environ.get("KAFKA_PEER_CATALOG_UPDATED_TOPIC", "peer.catalog.updated"))
-    
+
     # Topics for publishing
     catalog_availability_changed_topic: str = Field(
-        default_factory=lambda: os.environ.get("KAFKA_CATALOG_AVAILABILITY_CHANGED_TOPIC", "catalog.availability.changed"))
+        default_factory=lambda: os.environ.get("KAFKA_CATALOG_AVAILABILITY_CHANGED_TOPIC",
+                                               "catalog.availability.changed"))
     catalog_subscription_matched_topic: str = Field(
-        default_factory=lambda: os.environ.get("KAFKA_CATALOG_SUBSCRIPTION_MATCHED_TOPIC", "catalog.subscription.matched"))
+        default_factory=lambda: os.environ.get("KAFKA_CATALOG_SUBSCRIPTION_MATCHED_TOPIC",
+                                               "catalog.subscription.matched"))
 
 
 class RedisConfig(BaseModel):
@@ -33,7 +35,7 @@ class RedisConfig(BaseModel):
     port: int = Field(default_factory=lambda: int(os.environ.get("REDIS_PORT", "6379")))
     db: int = Field(default_factory=lambda: int(os.environ.get("REDIS_DB", "0")))
     password: str = Field(default_factory=lambda: os.environ.get("REDIS_PASSWORD", ""))
-    
+
     # Key prefixes for Redis
     peer_edge_prefix: str = Field(
         default_factory=lambda: os.environ.get("REDIS_PEER_EDGE_PREFIX", "tracker:peer:edge:"))
