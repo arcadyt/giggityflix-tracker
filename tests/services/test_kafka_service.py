@@ -100,7 +100,7 @@ class TestKafkaService:
         msg.partition.return_value = 0
 
         # Call method with no error
-        with patch("src.services.kafka_service.logger") as mock_logger:
+        with patch("giggityflix_tracker.services.kafka_service.logger") as mock_logger:
             kafka_service._delivery_report(None, msg)
 
             # Verify logger.debug was called
@@ -110,7 +110,7 @@ class TestKafkaService:
     def test_delivery_report_error(self, kafka_service):
         """Test the _delivery_report callback with error."""
         # Call method with error
-        with patch("src.services.kafka_service.logger") as mock_logger:
+        with patch("giggityflix_tracker.services.kafka_service.logger") as mock_logger:
             kafka_service._delivery_report("Error message", None)
 
             # Verify logger.error was called
@@ -149,8 +149,8 @@ class TestKafkaService:
         peer_catalog_updated_handler = MagicMock()
 
         # Mock thread creation
-        with patch("src.services.kafka_service.Consumer", return_value=mock_kafka_consumer), \
-             patch("src.services.kafka_service.threading.Thread") as mock_thread:
+        with patch("giggityflix_tracker.services.kafka_service.Consumer", return_value=mock_kafka_consumer), \
+             patch("giggityflix_tracker.services.kafka_service.threading.Thread") as mock_thread:
             mock_thread_instance = MagicMock()
             mock_thread.return_value = mock_thread_instance
 
@@ -434,7 +434,7 @@ class TestKafkaService:
         mock_kafka_consumer.poll = MagicMock(side_effect=poll_side_effect)
 
         # Call method
-        with patch("src.services.kafka_service.logger") as mock_logger:
+        with patch("giggityflix_tracker.services.kafka_service.logger") as mock_logger:
             kafka_service._consume_loop(
                 peer_connected_handler,
                 peer_disconnected_handler,
@@ -484,7 +484,7 @@ class TestKafkaService:
         mock_kafka_consumer.poll = MagicMock(side_effect=poll_side_effect)
 
         # Call method
-        with patch("src.services.kafka_service.logger") as mock_logger:
+        with patch("giggityflix_tracker.services.kafka_service.logger") as mock_logger:
             kafka_service._consume_loop(
                 peer_connected_handler,
                 peer_disconnected_handler,

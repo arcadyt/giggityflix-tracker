@@ -192,7 +192,7 @@ def mock_kafka_consumer():
 @pytest.fixture
 def redis_service(mock_redis):
     """Create a RedisService with mocked Redis client."""
-    with patch('src.services.redis_service.logger'):  # Mock logger to prevent logging in tests
+    with patch('giggityflix_tracker.services.redis_service.logger'):  # Mock logger to prevent logging in tests
         return RedisService(mock_redis)
 
 
@@ -200,8 +200,8 @@ def redis_service(mock_redis):
 def kafka_service(mock_kafka_producer, mock_kafka_consumer):
     """Create a KafkaService with mocked Producer and Consumer."""
     # Patch the Producer constructor
-    with patch("src.services.kafka_service.Producer", return_value=mock_kafka_producer), \
-            patch('src.services.kafka_service.logger'):  # Mock logger
+    with patch("giggityflix_tracker.services.kafka_service.Producer", return_value=mock_kafka_producer), \
+            patch('giggityflix_tracker.services.kafka_service.logger'):  # Mock logger
         # Create service and inject mocked producer
         service = KafkaService()
         service.producer = mock_kafka_producer
@@ -215,7 +215,7 @@ def kafka_service(mock_kafka_producer, mock_kafka_consumer):
 @pytest.fixture
 def subscription_service(redis_service, kafka_service):
     """Create a SubscriptionService with mocked dependencies."""
-    with patch('src.services.subscription_service.logger'):  # Mock logger
+    with patch('giggityflix_tracker.services.subscription_service.logger'):  # Mock logger
         return SubscriptionService(redis_service, kafka_service)
 
 
@@ -224,7 +224,7 @@ def tracker_service(redis_service, kafka_service, subscription_service):
     """Create a TrackerService with mocked dependencies."""
     # Patch the asyncio.create_task to prevent background tasks
     with patch("asyncio.create_task"), \
-            patch('src.services.tracker_service.logger'):  # Mock logger
+            patch('giggityflix_tracker.services.tracker_service.logger'):  # Mock logger
         return TrackerService(redis_service, kafka_service, subscription_service)
 
 
