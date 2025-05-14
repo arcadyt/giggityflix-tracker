@@ -1,14 +1,9 @@
 import json
-import sys
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock, patch
 
 import pytest
 from redis import Redis
-
-# Mock protobuf modules until we generate them
-sys.modules['src.grpc.generated.tracker_pb2'] = MagicMock()
-sys.modules['src.grpc.generated.tracker_pb2_grpc'] = MagicMock()
 
 from giggityflix_tracker.models import (
     CatalogAvailabilityChanged, CatalogSubscription, CatalogSubscriptionMatched,
@@ -284,37 +279,3 @@ def mock_future():
     future.exception.return_value = None
     return future
 
-
-# ====== gRPC Test Helpers ======
-
-@pytest.fixture
-def mock_grpc_context():
-    """Create a mock gRPC context for server tests."""
-    context = MagicMock()
-    context.set_code = MagicMock()
-    context.set_details = MagicMock()
-    return context
-
-
-@pytest.fixture
-def mock_pb2():
-    """Mock for the generated tracker_pb2 module."""
-    mock = MagicMock()
-
-    # Create mocks for response classes
-    mock.PeersResponse = MagicMock()
-    mock.PeersResponse.return_value = MagicMock()
-
-    mock.PeerInfo = MagicMock()
-    mock.PeerInfo.return_value = MagicMock()
-
-    mock.CatalogIdsResponse = MagicMock()
-    mock.CatalogIdsResponse.return_value = MagicMock()
-
-    mock.ForwardResponseMessage = MagicMock()
-    mock.ForwardResponseMessage.return_value = MagicMock()
-
-    mock.SubscriptionResponse = MagicMock()
-    mock.SubscriptionResponse.return_value = MagicMock()
-
-    return mock

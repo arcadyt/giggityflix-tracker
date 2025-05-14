@@ -1,42 +1,10 @@
 import asyncio
 import logging
 import signal
-from concurrent import futures
 
-from giggityflix_tracker.grpc import add_TrackerServiceServicer_to_server
-
-from giggityflix_tracker import grpc
-from giggityflix_tracker.config import config
-from giggityflix_tracker.dependencies import get_tracker_service
-from giggityflix_tracker.grpc.server import TrackerServicer
 from giggityflix_tracker.services.kafka_service import KafkaService
 
 logger = logging.getLogger(__name__)
-
-
-async def start_grpc_server():
-    server = grpc.aio.server(futures.ThreadPoolExecutor(max_workers=10))
-
-    # Get service instance
-    tracker_service = get_tracker_service()
-
-    # Add servicer to server
-    add_TrackerServiceServicer_to_server(
-        TrackerServicer(tracker_service), server
-    )
-
-    # Add secure credentials if needed
-    # if config.grpc.use_tls:
-    #     credentials = ...
-    #     server.add_secure_port(config.grpc.address, credentials)
-    # else:
-    server.add_insecure_port(config.grpc.address)
-
-    await server.start()
-
-    logger.info(f"gRPC server started on {config.grpc.address}")
-
-    return server
 
 
 async def start_kafka_consumer():
@@ -56,15 +24,13 @@ async def main():
     )
 
     # Start services
-    grpc_server = await start_grpc_server()
     kafka_service = await start_kafka_consumer()
 
     # Setup graceful shutdown
     async def shutdown(signal, loop):
         logger.info(f"Received exit signal {signal.name}...")
 
-        await grpc_server.stop(5)
-        kafka_service.stop()
+        await kafka_service.stop()
 
         tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
         [task.cancel() for task in tasks]

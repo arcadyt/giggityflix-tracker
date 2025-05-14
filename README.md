@@ -19,10 +19,6 @@ This service:
 # Install dependencies
 poetry install
 
-# Generate gRPC code from proto files
-# Assumes you have the proto files in a 'protos' directory
-python -m grpc_tools.protoc -I./protos --python_out=./src/grpc/generated --grpc_python_out=./src/grpc/generated ./protos/tracker.proto
-
 # Run service
 poetry run python -m src.main
 ```
@@ -30,10 +26,7 @@ poetry run python -m src.main
 ## Environment Variables
 
 ### Server Configuration
-
-- `GRPC_ADDRESS`: gRPC server address (default: 0.0.0.0:50051)
-- `GRPC_MAX_WORKERS`: Maximum number of workers (default: 10)
-- `GRPC_USE_TLS`: Use TLS for gRPC (default: false)
+- TBD
 
 ### Kafka Configuration
 
@@ -57,15 +50,6 @@ poetry run python -m src.main
 - `HEARTBEAT_INTERVAL_SECONDS`: Interval for stale peer checks (default: 30)
 - `CONNECTION_TIMEOUT_SECONDS`: Peer connection timeout (default: 120)
 - `SUBSCRIPTION_DEFAULT_TTL_HOURS`: Default subscription TTL (default: 24)
-
-## gRPC Interface
-
-The service exposes the following gRPC methods:
-
-- `GetPeersForCatalog(catalog_id)`: Find peers with specific media
-- `GetCatalogIdsForPeer(peer_id)`: Get catalog IDs owned by a peer
-- `ForwardRequest(peer_id, request_type, payload)`: Forward request to a peer
-- `SubscribeToCatalog(service_id, catalog_id)`: Subscribe to catalog availability
 
 ## Event Flow
 
