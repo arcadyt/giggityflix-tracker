@@ -3,13 +3,13 @@ import uuid
 from datetime import datetime, timedelta
 from typing import List, Optional
 
-from src.config import config
-from src.models import (
+from giggityflix_tracker.config import config
+from giggityflix_tracker.models import (
     CatalogSubscription, CatalogSubscriptionMatched,
     PeerInfo, SubscriptionStatus
 )
-from src.services.kafka_service import KafkaService
-from src.services.redis_service import RedisService
+from giggityflix_tracker.services.kafka_service import KafkaService
+from giggityflix_tracker.services.redis_service import RedisService
 
 logger = logging.getLogger(__name__)
 

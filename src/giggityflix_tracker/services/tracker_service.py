@@ -3,14 +3,14 @@ import logging
 from datetime import datetime
 from typing import List, Optional, Tuple
 
-from src.config import config
-from src.models import (
+from giggityflix_tracker.config import config
+from giggityflix_tracker.models import (
     CatalogAvailabilityChanged, PeerCatalogUpdated,
     PeerConnected, PeerDisconnected, PeerInfo
 )
-from src.services.kafka_service import KafkaService
-from src.services.redis_service import RedisService
-from src.services.subscription_service import SubscriptionService
+from giggityflix_tracker.services.kafka_service import KafkaService
+from giggityflix_tracker.services.redis_service import RedisService
+from giggityflix_tracker.services.subscription_service import SubscriptionService
 
 logger = logging.getLogger(__name__)
 

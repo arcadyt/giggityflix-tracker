@@ -1,7 +1,7 @@
 import json
 import sys
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 from redis import Redis
@@ -10,15 +10,15 @@ from redis import Redis
 sys.modules['src.grpc.generated.tracker_pb2'] = MagicMock()
 sys.modules['src.grpc.generated.tracker_pb2_grpc'] = MagicMock()
 
-from src.models import (
+from giggityflix_tracker.models import (
     CatalogAvailabilityChanged, CatalogSubscription, CatalogSubscriptionMatched,
     PeerCatalogUpdated, PeerConnected, PeerConnectionState, PeerDisconnected,
     PeerInfo, SubscriptionStatus
 )
-from src.services.kafka_service import KafkaService
-from src.services.redis_service import RedisService
-from src.services.subscription_service import SubscriptionService
-from src.services.tracker_service import TrackerService
+from giggityflix_tracker.services.kafka_service import KafkaService
+from giggityflix_tracker.services.redis_service import RedisService
+from giggityflix_tracker.services.subscription_service import SubscriptionService
+from giggityflix_tracker.services.tracker_service import TrackerService
 
 
 # ====== Test Data Fixtures ======

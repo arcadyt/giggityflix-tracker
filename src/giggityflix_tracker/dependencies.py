@@ -1,11 +1,11 @@
 import aioredis
 from redis import Redis
 
-from src.config import config
-from src.services.kafka_service import KafkaService
-from src.services.redis_service import RedisService
-from src.services.subscription_service import SubscriptionService
-from src.services.tracker_service import TrackerService
+from giggityflix_tracker.config import config
+from giggityflix_tracker.services.kafka_service import KafkaService
+from giggityflix_tracker.services.redis_service import RedisService
+from giggityflix_tracker.services.subscription_service import SubscriptionService
+from giggityflix_tracker.services.tracker_service import TrackerService
 
 
 async def get_redis_async():

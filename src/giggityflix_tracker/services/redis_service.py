@@ -4,8 +4,8 @@ from typing import List, Optional, Set, Tuple
 
 from redis import Redis
 
-from src.config import config
-from src.models import (
+from giggityflix_tracker.config import config
+from giggityflix_tracker.models import (
     CatalogSubscription, PeerConnectionState,
     PeerInfo, SubscriptionStatus
 )

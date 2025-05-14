@@ -1,15 +1,14 @@
 import json
 import logging
 import threading
-from typing import Callable, Dict, List, Any
+from typing import Callable, Dict, Any
 
 from confluent_kafka import Consumer, Producer, KafkaError, KafkaException
 
-from src.config import config
-from src.models import (
+from giggityflix_tracker.config import config
+from giggityflix_tracker.models import (
     CatalogAvailabilityChanged, CatalogSubscriptionMatched,
-    PeerCatalogUpdated, PeerConnected, PeerDisconnected,
-    PeerInfo
+    PeerCatalogUpdated, PeerConnected, PeerDisconnected
 )
 
 logger = logging.getLogger(__name__)
