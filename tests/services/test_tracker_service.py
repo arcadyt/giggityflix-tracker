@@ -1,4 +1,5 @@
 import asyncio
+from unittest.mock import AsyncMock
 
 from tests.conftest import *  # Import fixtures
 
